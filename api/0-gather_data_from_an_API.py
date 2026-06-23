@@ -1,35 +1,31 @@
 #!/usr/bin/python3
-"""
-getting data using api
-"""
+""" Library to gather data from an API """
+
 import requests
 import sys
 
+""" Script to return a given employee ID
+together with their TODO list progress
+"""
+
 if __name__ == "__main__":
-    employee_Id = int(sys.argv[1])
+    employee_id = sys.argv[1]
+    url = "https://jsonplaceholder.typicode.com/users/{}".format(employee_id)
 
-    todo_url = "https://jsonplaceholder.typicode.com/todos"
-    user_data_url = "https://jsonplaceholder.typicode.com/users"
+    todo = "https://jsonplaceholder.typicode.com/todos?userId={}"
+    todo = todo.format(employee_id)
 
-    user_response = requests.get(user_data_url)
-    todo_response = requests.get(todo_url)
-    # if todo_response.status_code & user_response.status_code == 200:
-    todos = todo_response.json()
-    users = user_response.json()
-    for user in users:
-        if user.get("id") == employee_Id:
-            employee_name = user.get("name")
-    # filter completed tasks
-    done = []
-    total = 0
-    completed = 0
-    for todo in todos:
-        if todo.get("userId") == employee_Id:
-            total += 1
-            if todo.get("completed"):
-                completed += 1
-                done.append(todo.get("title"))
-    # Display the progress information
-    print(f"Employee {employee_name} is done with tasks({completed}/{total}):")
-    for _ in done:
-        print(f"\t {_}")
+    user_info = requests.request("GET", url).json()
+    todo_info = requests.request("GET", todo).json()
+
+    employee_name = user_info.get("name")
+    total_tasks = list(filter(lambda x: (x["completed"] is True), todo_info))
+    task_com = len(total_tasks)
+    total_task_done = len(todo_info)
+
+    print(
+        "Employee {} is done with tasks({}/{}):".format(
+            employee_name, task_com, total_task_done
+        )
+    )
+    [print("\t {}".format(task.get("title"))) for task in total_tasks]
